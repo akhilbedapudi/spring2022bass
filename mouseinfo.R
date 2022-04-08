@@ -74,6 +74,7 @@ pvalsresults=matrix(NA,(dim(data)[2]-6)  ,3)
 rownames(pvalsresults)=names(data)[6:(dim(data)[2]-1)]
 colnames(pvalsresults)= c( "Genotype","Treatment" , "Genotype*Treatment")
 
+
 library(rstatix)
 #install.packages('berryFunctions')
 library(berryFunctions)
@@ -117,15 +118,47 @@ library(emmeans)
 
 sig = sig[,1]
 posthocT=matrix(NA,length(sig),7)
+
+library(nlme)
+library(emmeans)
 for (i in 1:length(sig)) {
   tempname=names(sig)[i]
-  res.aov <- aov(get(tempname) ~ Treatment, data = data)
-  a=tukey_hsd(res.aov)
+  res.aov=aov(get(tempname)~Genotype*Treatment+Error(factor(Mouse)), data = data)
+  emm <- emmeans(res.aov, ~ Treatment)
+  a=summary(pairs(emm))$p.value #default adjustment is Tukey
   posthocT[,1]=sig
-  posthocT[,2:7]=a$p.adj
-  rownames(posthocT)[i]=tempname
+  posthocT[,2:7]=a
 }
 
-colnames(posthocT)=c("fdr","IL","ILI","IS", "LLI", "LS", "LIS")
+colnames(posthocT)[2:7]=summary(pairs(emm))[,1]
+colnames(posthocT)[1]="FDR"
+rownames(posthocT)=names(sig)
+
+model <- aov(get(tempname)~Genotype*Treatment+Error(factor(Mouse)), data = data)
+#model1 <- anova_test(data=data,get(tempname)~Genotype*Treatment,wid = Mouse, within = TimePoint, type=3)
+
+#lme_velocity = lme(get(tempname) ~ Genotype*Treatment, data=data, random = ~1|Mouse)
+#anova(lme_velocity)
+
+#require(multcomp)
+#summary(glht(lme_velocity, linfct=mcp(Genotype*Treatment = "Tukey")), test = adjusted(type = "bonferroni"))
+
+
+colnames(posthocT)=c("fdr","Iron-LPS","Iron-LPS+Iron","Iron-Saline", "LPS-LPS+Iron", "LPS-Saline", "LPS+Iron-Saline")
+
+
+posthocG=matrix(NA,length(sig),5)
+for (i in 1:length(sig)) {
+  tempname=names(sig)[i]
+  res.aov1 <- aov(get(tempname) ~ Genotype, data = data, within = TimePoint)
+  ab=tukey_hsd(res.aov1)
+  posthocG[,1]=sig
+  posthocG[,5]=ab$p.adj
+  rownames(posthocG)[i]=tempname
+}
+
+colnames(posthocG)=c("fdr","2")
+
+
 
  
