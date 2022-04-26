@@ -1,4 +1,4 @@
-# spring2022bass
+# Spring 2022 Bass Connections Code Files - Akhil & Jasmine
 ## Python scripts for voxel-based analyses and R scripts for running statistical tests. 
 
 ### mouseinfo_latest.R --> latest R script for conducting region-based statistical analyses on 5xFAD/WT mouse dataset
